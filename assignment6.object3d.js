@@ -85,10 +85,15 @@ class Object3D
      */
     createVAO( gl, shader )
     {
+        // create and bind the VAO
         this.vertex_array_object = gl.createVertexArray();
         gl.bindVertexArray(this.vertex_array_object);
+
+        // set up the VBO
         gl.bindBuffer( gl.ARRAY_BUFFER, this.vertices_buffer )
 
+        // all of the positions come first in the array, followed by all the normals
+        // therefore, offset and stride are 0
         let location = shader.getAttributeLocation( 'a_position' )
         let stride = 0, offset = 0
         if (location >= 0) {
@@ -97,6 +102,7 @@ class Object3D
             gl.vertexAttribPointer( location, this.num_components_vec3, gl.FLOAT, false, stride, offset )
         }
 
+        // all the normals come after the all the positions, so set the offset to be halfway through the array
         location = shader.getAttributeLocation( 'a_normal' )
         if (location >= 0) {
             gl.enableVertexAttribArray( location )
@@ -203,13 +209,13 @@ class ShadedObject3D extends Object3D {
     {
         // NOTE: There are now two versions of this.num_components -> this.num_components_vec3 and this.num_components_vec2 to accommodate texture coordinate data
 
+        // create and bind the VAO, and bind the VBO
         this.vertex_array_object = gl.createVertexArray();
         gl.bindVertexArray(this.vertex_array_object);
         gl.bindBuffer( gl.ARRAY_BUFFER, this.vertices_buffer )
 
         let stride = 0, offset = 0
 
-        // This number might come in handy when setting up your attribute pointers but there's no obligation to use it
         let num_total_components = 6 // 3 position + 3 normal
         num_total_components += this.material.hasTexture() ? 5 : 0 // +5 = 3 tangent + 2 texture coord
 
@@ -262,9 +268,10 @@ class ShadedObject3D extends Object3D {
      */
     render( gl )
     {
-
+        // activate the shader
         this.shader.use( )
 
+        // set up the material properties in the shader
 		this.shader.setUniform3f('u_material.kA', this.material.kA)
 		this.shader.setUniform3f('u_material.kD', this.material.kD)
 		this.shader.setUniform3f('u_material.kS', this.material.kS)
@@ -289,6 +296,7 @@ class ShadedObject3D extends Object3D {
             this.shader.setUniform1i('u_material.map_norm', 2)
         }
 
+        // deactivate the shader when done
         this.shader.unuse( )
 
         super.render( gl )
